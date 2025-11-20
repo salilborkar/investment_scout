@@ -1,72 +1,86 @@
+import os
+import sys
 
-#about_sandiego.py
+# --- IMPORT YOUR RAG LIBRARIES HERE ---
+# Example:
+# from langchain.document_loaders import TextLoader
+# from langchain.vectorstores import FAISS
+# from langchain.embeddings.openai import OpenAIEmbeddings
+# from langchain.chat_models import ChatOpenAI
 
-import ollama
+def start_chat_session(source_document):
+    """
+    Initializes the RAG system with the specific 10-k report
+    and starts the conversational loop.
+    """
+    print(f"--- [rag_chatbot] Initializing Knowledge Base from: {source_document} ---")
+    
+    # Check if file exists before trying to process
+    if not os.path.exists(source_document):
+        print(f"Error: Source file '{source_document}' not found.")
+        return
 
-# loading the dataset
+    # =====================================================
+    # STEP 1: INGESTION (The "Retriever" Setup)
+    # =====================================================
+    print("... Vectorizing document (this may take a moment) ...")
+    
+    # [PASTE YOUR INGESTION CODE HERE]
+    # 1. Load the text file using 'source_document' variable
+    # 2. Split text into chunks
+    # 3. Create Embeddings & Vector Store
+    
+    # Example Placeholder Logic:
+    # loader = TextLoader(source_document)
+    # documents = loader.load()
+    # vector_store = FAISS.from_documents(documents, embedding_model)
+    
+    print("--- [rag_chatbot] System Ready. Ask me about the financial report. ---")
+    print("(Type 'exit' or 'quit' to finish)")
 
-dataset=[]
-with open('about_sandiego.txt','r') as f:
-	dataset=f.readlines()
-	print(f" {len(dataset)} entries")
+    # =====================================================
+    # STEP 2: THE CHAT LOOP
+    # =====================================================
+    while True:
+        try:
+            user_query = input("\nUser (You): ").strip()
+            
+            # Exit condition
+            if user_query.lower() in ['exit', 'quit']:
+                print("Closing chat session...")
+                break
+            
+            if not user_query:
+                continue
 
-#add data to vector db
+            # =================================================
+            # STEP 3: GENERATION (The "LLM" Call)
+            # =================================================
+            # [PASTE YOUR RETRIEVAL & GENERATION CODE HERE]
+            
+            # Logic:
+            # 1. Search vector_store for relevant docs based on user_query
+            # 2. Send query + context to LLM
+            # 3. Print the result
+            
+            # Example Placeholder:
+            # relevant_docs = vector_store.similarity_search(user_query)
+            # answer = chain.run(input_documents=relevant_docs, question=user_query)
+            # print(f"AI (Analyst): {answer}")
 
-EMBEDDING_MODEL = 'hf.co/CompendiumLabs/bge-base-en-v1.5-gguf'
-LANGUAGE_MODEL = 'hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF'
+            # --- For testing purposes without your API keys, use this: ---
+            print(f"AI (Analyst): [Calculating answer for '{user_query}' based on {source_document} data...]")
+            
+        except KeyboardInterrupt:
+            # Handle Ctrl+C gracefully
+            print("\nInterrupted. Exiting chat.")
+            break
 
-vector_db=[]
-
-#adding data chunks to the vector db
-
-def add_chunks2db(chunk):
-	embedding=ollama.embed(model=EMBEDDING_MODEL,input=chunk)['embeddings'][0]
-	vector_db.append((chunk,embedding))
-
-for i,chunk in enumerate(dataset):
-	add_chunks2db(chunk)
-	print(f"{i+1}/{len(dataset)} chunk added")
-
-#find similarity in words
-
-def cosine_similarity(a,b):
-	dot_product=sum([x*y for x,y in zip(a,b)])
-	normA=sum([x**2 for x in a]) ** 0.5
-	normB=sum([x**2 for x in b]) ** 0.5
-	return dot_product/(normA*normB)
-
-def retrieve(query,top_n=3):
-	query_embedding=ollama.embed(model=EMBEDDING_MODEL,input=query)['embeddings'][0]
-	#temporarily store (chunk,similarity) pairs
-	similarities=[]
-
-	for chunk,embedding in vector_db:
-		similarity=cosine_similarity(query_embedding,embedding)
-		similarities.append((chunk,similarity))
-	#sorting similarity in descending order - higher similarity mean more chunks that are relevant
-	similarities.sort(key=lambda x:x[1],reverse=True)
-	#return top n similar chunks
-	return similarities[:top_n]
-
-#chatbot
-
-input_query=input('Ask me a question about San Diego: ')
-retrieved_kb=retrieve(input_query)
-print('Retrieved knowledge: ')
-for chunk, similarity in retrieved_kb:
-	print(f' - (similarity: {similarity:.2f}) {chunk}')
-
-instruction_prompt = f'''use the following pieces of context to answer the question only {'\n'.join([f' - {chunk}' for chunk,similarity in retrieved_kb])}'''
-
-print(f" instruction prompt: {instruction_prompt}")
-
-stream=ollama.chat(model=LANGUAGE_MODEL,messages=[
-	{'role':'system','content': instruction_prompt},
-	{'role':'system','content': input_query},
-	],
-	stream=True,
-	)
-#printing the response from chatbot in real-time
-print('Chatbot response: ')
-for chunk in stream:
-	print(chunk['message']['content'],end='',flush=True)
+# Test Block
+if __name__ == "__main__":
+    # Create a dummy file to test the logic if needed
+    if not os.path.exists("test_data.txt"):
+        with open("test_data.txt", "w") as f:
+            f.write("This is a test financial report for Apple Inc.")
+            
+    start_chat_session("test_data.txt")
