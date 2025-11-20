@@ -1,6 +1,8 @@
 import os
 import sys
 
+# --- ADD THIS IMPORT AT THE TOP OF THE FILE ---
+from langchain_community.document_loaders import PyPDFLoader
 # --- IMPORT YOUR RAG LIBRARIES HERE ---
 # Example:
 # from langchain.document_loaders import TextLoader
@@ -9,33 +11,36 @@ import sys
 # from langchain.chat_models import ChatOpenAI
 
 def start_chat_session(source_document):
-    """
-    Initializes the RAG system with the specific 10-k report
-    and starts the conversational loop.
-    """
     print(f"--- [rag_chatbot] Initializing Knowledge Base from: {source_document} ---")
     
-    # Check if file exists before trying to process
     if not os.path.exists(source_document):
         print(f"Error: Source file '{source_document}' not found.")
         return
 
     # =====================================================
-    # STEP 1: INGESTION (The "Retriever" Setup)
+    # STEP 1: INGESTION (UPDATED FOR PDF)
     # =====================================================
-    print("... Vectorizing document (this may take a moment) ...")
+    print("... Parsing PDF and Vectorizing (this may take a moment) ...")
     
-    # [PASTE YOUR INGESTION CODE HERE]
-    # 1. Load the text file using 'source_document' variable
-    # 2. Split text into chunks
-    # 3. Create Embeddings & Vector Store
-    
-    # Example Placeholder Logic:
-    # loader = TextLoader(source_document)
-    # documents = loader.load()
-    # vector_store = FAISS.from_documents(documents, embedding_model)
-    
-    print("--- [rag_chatbot] System Ready. Ask me about the financial report. ---")
+    try:
+        # 1. Load the PDF
+        loader = PyPDFLoader(source_document)
+        
+        # 2. Split and Load pages
+        # distinct from text files, this loads page-by-page
+        documents = loader.load_and_split()
+        
+        # Debug: Let the user know how big the file is
+        print(f"   > Successfully loaded {len(documents)} pages from the PDF.")
+
+        # 3. Create Embeddings & Vector Store (Existing logic)
+        # vector_store = FAISS.from_documents(documents, embedding_model)
+        
+    except Exception as e:
+        print(f"Error processing PDF: {e}")
+        return
+
+    print("--- [rag_chatbot] System Ready. Ask me about the 10-K report. ---")
     print("(Type 'exit' or 'quit' to finish)")
 
     # =====================================================
