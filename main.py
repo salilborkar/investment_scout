@@ -16,7 +16,7 @@ def main():
     
     # Map ticker to the specific PDF file for RAG context
     # In a real app, this might verify the file exists first
-    data_file_path = f"data/{ticker}_10K.pdf"
+    data_file_path = f"data/{ticker}_10k.pdf"
     print(f"file name is {data_file_path} ")
     
     if not os.path.exists(data_file_path):
