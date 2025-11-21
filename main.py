@@ -16,10 +16,10 @@ def main():
     
     # Map ticker to the specific text file for RAG context
     # In a real app, this might verify the file exists first
-    data_file_path = f"data/{ticker}_10k.txt"
+    data_file_path = f"data/{ticker}_10k.pdf"
     
     if not os.path.exists(data_file_path):
-        print(f"Error: No data file found for {ticker}. Please add {ticker}_10k.txt to /data.")
+        print(f"Error: No data file found for {ticker}. Please add {ticker}_10k.pdf to /data.")
         sys.exit()
 
     # 2. The Visualization Phase
