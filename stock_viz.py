@@ -1,50 +1,47 @@
-import csv
-from datetime import datetime
-import matplotlib.pyplot as pt
+import matplotlib.pyplot as plt
+import yfinance as yf
 
-file_name='data/sd_weather.csv'
+def generate_chart(ticker):
+    """
+    Fetches 1 year of historical data for the given ticker
+    and displays a line chart of the Closing prices.
+    """
+    print(f"--- [stock_viz] Fetching data for {ticker} from Yahoo Finance... ---")
+    
+    # 1. Fetch Data
+    # We download the last 1 year ('1y') of data.
+    try:
+        stock_data = yf.download(ticker, period="1y", progress=False)
+        
+        # Check if data was actually returned (e.g., if user typed a fake ticker)
+        if stock_data.empty:
+            print(f"Error: No data found for symbol '{ticker}'.")
+            return
+            
+    except Exception as e:
+        print(f"An error occurred while fetching data: {e}")
+        return
 
-#get header information
+    # 2. Create the Visualization
+    plt.figure(figsize=(10, 6))
+    
+    # Plot the 'Close' column from the dataframe
+    # We use the dataframe index (Date) for the X-axis automatically
+    plt.plot(stock_data.index, stock_data['Close'], label='Close Price', color='blue', linewidth=2)
 
-with open(file_name) as f:
-	reader=csv.reader(f)
-	header=next(reader)
-	#print("Printing Column names: ")
-	#print(header)
+    # 3. Style the Chart (The "Product Polish")
+    plt.title(f"{ticker} Stock Price - Last 1 Year", fontsize=16)
+    plt.xlabel("Date", fontsize=12)
+    plt.ylabel("Price (USD)", fontsize=12)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend()
 
-	#get date, max and min wind speed data
+    # 4. Display the Chart
+    # This command halts the script until the window is closed by the user
+    print("--- [stock_viz] Displaying Chart. Close the window to continue. ---")
+    plt.show()
 
-	dates=[]
-	max_wind=[]
-	min_wind=[]
-
-	for row in reader:
-		curr_date=datetime.strptime(row[1],'%Y-%m-%d')
-		date=curr_date.date()
-		maxW=row[7]
-		dates.append(date)
-		max_wind.append(maxW)
-		minW=row[9]
-		min_wind.append(minW)
-
-#plotting the data
-pt.style.use('_mpl-gallery')
-fig,ax=pt.subplots()
-ax.plot(dates,max_wind,c='red')
-ax.plot(dates,min_wind,c='blue')
-
-#formatting the plot
-pt.title('Daily Max and Min Wind Speeds')
-pt.xlabel('')
-pt.ylabel('Wind Speedds (mph)')
-pt.show()
-
-#print("Max Wind Speeds are: ")	
-#print(max_wind)
-#print("Min Wind Speeds are: ")
-#print(min_wind)
-
-# print headers and their index positions
-
-#for index,col_header in enumerate(header):
-#	print(index,col_header)
+# This block allows you to test this file safely without running main.py
+if __name__ == "__main__":
+    # If I run 'python stock_viz.py' directly, test with AAPL
+    generate_chart("AAPL")
